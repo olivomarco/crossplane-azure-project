@@ -1,0 +1,123 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: azureservice-composition
+spec:
+  compositeTypeRef:
+    apiVersion: example.org/v1alpha1
+    kind: CompositeAzureService
+  resources:
+  - name: resourcegroup
+    base:
+      apiVersion: azure.upbound.io/v1beta1
+      kind: ResourceGroup
+      metadata:
+        name: default-rg
+      spec:
+        forProvider:
+          location: italynorth
+          tags:
+            provisioner: crossplane
+    patches:
+      - fromFieldPath: "spec.resourceGroup"
+        toFieldPath: "metadata.name"
+      - fromFieldPath: "spec.location"
+        toFieldPath: "spec.forProvider.location"
+  - name: serviceplan
+    base:
+      # This is your updated base for the App Service Plan
+      apiVersion: web.azure.upbound.io/v1beta1
+      kind: ServicePlan
+      metadata:
+        name: default-appserviceplan
+        labels:
+          testing.upbound.io/example-name: example
+      spec:
+        forProvider:
+          location: italynorth
+          resourceGroupName: default-rg
+          skuName: "S1"
+          osType: "Windows"
+    patches:
+      - fromFieldPath: "spec.appServicePlanName"
+        toFieldPath: "metadata.name"
+      - fromFieldPath: "spec.appServicePlanSize"
+        toFieldPath: "spec.forProvider.skuName"
+      - fromFieldPath: "spec.resourceGroup"
+        toFieldPath: "spec.forProvider.resourceGroupName"
+      - fromFieldPath: "spec.location"
+        toFieldPath: "spec.forProvider.location"
+  - name: windowswebapp
+    base:
+      # This is your updated base for the App Service (a WindowsWebApp)
+      apiVersion: web.azure.upbound.io/v1beta2
+      kind: WindowsWebApp
+      metadata:
+        name: default-webapp
+      spec:
+        forProvider:
+          resourceGroupName: default-rg
+          name: default-webapp
+          location: italynorth
+          servicePlanIdRef:
+            name: default-appserviceplan
+          siteConfig: {}
+    patches:
+      - fromFieldPath: "spec.appServiceName"
+        toFieldPath: "metadata.name"
+      - fromFieldPath: "spec.resourceGroup"
+        toFieldPath: "spec.forProvider.resourceGroupName"
+      - fromFieldPath: "spec.appServicePlanName"
+        toFieldPath: "spec.forProvider.servicePlanIdRef.name"
+      - fromFieldPath: "spec.location"
+        toFieldPath: "spec.forProvider.location"
+  - name: postgresql
+    base:
+      # This is your updated base for PostgreSQL Server
+      apiVersion: dbforpostgresql.azure.upbound.io/v1beta2
+      kind: FlexibleServer
+      metadata:
+        name: default-db
+      spec:
+        forProvider:
+          administratorLogin: marcouser
+          administratorPasswordSecretRef:
+            key: example-key
+            name: example-secret
+            namespace: default
+          autoGeneratePassword: true
+          location: italynorth
+          publicNetworkAccess: Enabled
+          resourceGroupName: default-rg
+          skuName: GP_Standard_D4s_v3
+          storageMb: 32768
+          storageTier: P30
+          version: "16"
+    patches:
+      - fromFieldPath: "spec.databaseName"
+        toFieldPath: "metadata.name"
+      - fromFieldPath: "spec.resourceGroup"
+        toFieldPath: "spec.forProvider.resourceGroupName"
+      - fromFieldPath: "spec.location"
+        toFieldPath: "spec.forProvider.location"
+  - name: storageaccount
+    base:
+      # This is your updated base for the Storage Account (now an Account)
+      apiVersion: storage.azure.upbound.io/v1beta2
+      kind: Account
+      metadata:
+        name: default-storage
+      spec:
+        forProvider:
+          accountKind: BlobStorage
+          accountReplicationType: LRS
+          accountTier: Standard
+          location: italynorth
+          resourceGroupName: default-rg
+    patches:
+      - fromFieldPath: "spec.storageAccountName"
+        toFieldPath: "metadata.name"
+      - fromFieldPath: "spec.resourceGroup"
+        toFieldPath: "spec.forProvider.resourceGroupName"
+      - fromFieldPath: "spec.location"
+        toFieldPath: "spec.forProvider.location"

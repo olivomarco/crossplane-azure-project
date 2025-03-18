@@ -1,0 +1,37 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: compositeazureservices.example.org
+spec:
+  group: example.org
+  names:
+    kind: CompositeAzureService
+    plural: compositeazureservices
+  claimNames:
+    kind: AzureService
+    plural: azureservices
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              location:
+                type: string
+              appServicePlanName:
+                type: string
+              appServiceName:
+                type: string
+              databaseName:
+                type: string
+              storageAccountName:
+                type: string
+              resourceGroup:
+                type: string
+              appServicePlanSize:
+                type: string

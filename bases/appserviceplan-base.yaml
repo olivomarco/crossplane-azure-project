@@ -1,0 +1,18 @@
+apiVersion: web.azure.upbound.io/v1beta2
+kind: ServicePlan
+metadata:
+  annotations:
+    meta.upbound.io/example-id: web/v1beta2/functionappslot
+  labels:
+    testing.upbound.io/example-name: funcappslot-sp
+  name: funcappslot-sp
+spec:
+  forProvider:
+    location: West Europe
+    resourceGroupNameSelector:
+      matchLabels:
+        testing.upbound.io/example-name: funcappslot-rg
+    # sku:
+    #   size: S1
+    #   tier: Standard
+    skuName: "S1"

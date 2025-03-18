@@ -1,0 +1,15 @@
+apiVersion: web.azure.upbound.io/v1beta2
+kind: WindowsWebApp
+metadata:
+  annotations:
+    meta.upbound.io/example-id: web/v1beta2/windowswebapp
+  labels:
+    testing.upbound.io/example-name: windowsappexample
+  name: windowsappexample
+spec:
+  forProvider:
+    location: West Europe
+    resourceGroupName: windowswebapp-rg
+    servicePlanIdRef:
+      name: funcappslot-sp
+    siteConfig: {}

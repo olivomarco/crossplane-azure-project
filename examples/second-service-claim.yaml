@@ -1,0 +1,12 @@
+apiVersion: example.org/v1alpha1
+kind: AzureService
+metadata:
+  name: second-azure-service
+spec:
+  location: "westeurope"
+  resourceGroup: "second-resource-group"  # resource group must be created beforehand
+  appServicePlanName: "second-azure-service"
+  appServiceName: "second-appservice1938x" # app service name must be globally unique
+  databaseName: "second-db1938x" # database name must be globally unique
+  storageAccountName: "secondstorage1938x" # storage account must be globally unique
+  appServicePlanSize: "S1"
