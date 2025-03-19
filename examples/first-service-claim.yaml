@@ -5,7 +5,7 @@ metadata:
 spec:
   location: "westeurope"
   resourceGroup: "first-resource-group"  # resource group must be created beforehand
-  appServicePlanName: "first-azure-service"
+  appServicePlanName: "first-serviceplan"
   appServiceName: "first-appservice1938x" # app service name must be globally unique
   databaseName: "first-db1938x" # database name must be globally unique
   storageAccountName: "firststorage1938x" # storage account must be globally unique

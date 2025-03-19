@@ -23,7 +23,9 @@ az aks create \
 --resource-group $RESOURCE_GROUP_NAME \
 --name $CLUSTER_NAME \
 --node-count 2 \
+--node-vm-size Standard_D2s_v6 \
 --enable-managed-identity \
+--ssh-access disabled \
 --location $LOCATION
 
 # Get the AKS credentials
@@ -35,14 +37,13 @@ az aks get-credentials \
 helm repo add \
 crossplane-stable https://charts.crossplane.io/stable
 helm repo update
+
 helm install crossplane \
 crossplane-stable/crossplane \
 --namespace crossplane-system \
 --create-namespace
 
 # Install the Crossplane Providers for Azure
-#kubectl crossplane install provider crossplane-contrib/provider-azure:v0.20.1
-kubectl apply -f install-crossplane.yaml
 kubectl crossplane install provider upbound/provider-azure-web:v1.11.2
 kubectl crossplane install provider upbound/provider-azure-dbforpostgresql:v1.11.2
 kubectl crossplane install provider upbound/provider-azure-storage:v1.11.2
@@ -57,6 +58,7 @@ kubectl create secret \
 generic azure-secret \
 -n crossplane-system \
 --from-file=creds=./azure-credentials.json
+
 cat <<EOF | kubectl apply -f -
 apiVersion: azure.upbound.io/v1beta1
 metadata:
@@ -70,22 +72,9 @@ spec:
       name: azure-secret
       key: creds
 EOF
-cat <<EOF | kubectl apply -f -
-apiVersion: azure.crossplane.io/v1beta1
-metadata:
-  name: default
-kind: ProviderConfig
-spec:
-  credentials:
-    source: Secret
-    secretRef:
-      namespace: crossplane-system
-      name: azure-secret
-      key: creds
-EOF
 
 # Install our resources
-kubectl apply -f xrd/compositeazureservices.yaml
+kubectl apply -f xrd/compositeazureservice.yaml
 kubectl apply -f compositions/azureservice-composition.yaml
 
 # Install a sample application
@@ -117,7 +106,7 @@ kubectl delete -f examples/second-service-claim.yaml
 
 # Delete the Crossplane resources
 kubectl delete -f compositions/azureservice-composition.yaml
-kubectl delete -f xrd/compositeazureservices.yaml
+kubectl delete -f xrd/compositeazureservice.yaml
 
 # Delete the AKS cluster
 az aks delete \
@@ -131,10 +120,8 @@ az group delete \
 --name $RESOURCE_GROUP_NAME \
 --yes \
 --no-wait
+
+# Remove entries from local kubeconfig
+kubectl config delete-context $CLUSTER_NAME
+kubectl config delete-cluster $CLUSTER_NAME
 ```
-
-## TODO
-
-- [ ] Test everything from a scratch new AKS cluster
-- [ ] Verify the need of `install-crossplane.yaml` file
-- [ ] Verify the need of `bases` folder
