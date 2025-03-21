@@ -1,7 +1,18 @@
-# Azure Web App, PostgreSQL and Storage Account via Crossplane
+# Resource Group, Azure Web App, PostgreSQL and Storage Account via Crossplane
 
 This repository contains the Crossplane code to create resources in Azure to host a webapp on Azure solution for developers.
 Everything is created using Crossplane and the Azure provider from Upbound.
+
+Developers only have to specify their own configuration file (like [this one](examples/first-service-claim.yaml)) to create and run a webapp, PostgreSQL database and storage account in Azure - all in a dedicated resource group.
+
+This file, from a Platform-Engineering perspective, can be hosted in a different repo, owned by the developers. The Platform Engineering team is the owner of these resources:
+
+- [compositions/azureservice-composition.yaml](compositions/azureservice-composition.yaml)
+- [xrd/compositeazureservice.yaml](xrd/compositeazureservice.yaml)
+
+and they apply these resources to the control AKS cluster. The developers can then apply their own manifests, for instance through a pipeline or through GitOps mode, to the same cluster.
+
+![Example diagram](./_images/crossplane-diagram.png)
 
 ## Install
 
@@ -90,7 +101,7 @@ You can monitor the status of the resources created by Crossplane using the foll
 # View the status of the application
 kubectl get resourcegroups.azure.upbound.io
 kubectl get serviceplans.web.azure.upbound.io
-kubectl get windowswebapps.web.azure.upbound.io
+kubectl get linuxwebapps.web.azure.upbound.io
 kubectl get accounts.storage.azure.upbound.io
 kubectl get flexibleservers.dbforpostgresql.azure.upbound.io
 ```

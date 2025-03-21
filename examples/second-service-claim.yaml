@@ -3,10 +3,10 @@ kind: AzureService
 metadata:
   name: second-azure-service
 spec:
+  appName: "second"
+  randomSuffix: "9411x"
   location: "westeurope"
-  resourceGroup: "second-resource-group"  # resource group must be created beforehand
-  appServicePlanName: "second-serviceplan"
-  appServiceName: "second-appservice1938x" # app service name must be globally unique
-  databaseName: "second-db1938x" # database name must be globally unique
-  storageAccountName: "secondstorage1938x" # storage account must be globally unique
   appServicePlanSize: "S1"
+  imageName: "nginx"
+  imageTag: "latest"
+  imageRegistryUrl: "docker.io"

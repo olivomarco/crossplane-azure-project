@@ -1,3 +1,5 @@
+# This composition is made of multiple resources including
+# a Resource Group, App Service Plan, Web App, PostgreSQL Server, and Storage Account.
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
@@ -9,6 +11,7 @@ spec:
   resources:
   - name: resourcegroup
     base:
+      # This is your updated base for the Resource Group
       apiVersion: azure.upbound.io/v1beta1
       kind: ResourceGroup
       metadata:
@@ -19,11 +22,16 @@ spec:
           tags:
             provisioner: crossplane
     patches:
-      - fromFieldPath: "spec.resourceGroup"
+      - fromFieldPath: "spec.appName"
         toFieldPath: "metadata.name"
+        transforms:
+          - type: string
+            string:
+              fmt: "%s-rg"
       - fromFieldPath: "spec.location"
         toFieldPath: "spec.forProvider.location"
-  - name: serviceplan
+
+  - name: linuxserviceplan
     base:
       # This is your updated base for the App Service Plan
       apiVersion: web.azure.upbound.io/v1beta1
@@ -37,21 +45,30 @@ spec:
           location: italynorth
           resourceGroupName: default-rg
           skuName: "S1"
-          osType: "Windows"
+          osType: "Linux"
     patches:
-      - fromFieldPath: "spec.appServicePlanName"
+      - fromFieldPath: "spec.appName"
         toFieldPath: "metadata.name"
+        transforms:
+          - type: string
+            string:
+              fmt: "%s-plan"
       - fromFieldPath: "spec.appServicePlanSize"
         toFieldPath: "spec.forProvider.skuName"
-      - fromFieldPath: "spec.resourceGroup"
+      - fromFieldPath: "spec.appName"
         toFieldPath: "spec.forProvider.resourceGroupName"
+        transforms:
+          - type: string
+            string:
+              fmt: "%s-rg"
       - fromFieldPath: "spec.location"
         toFieldPath: "spec.forProvider.location"
-  - name: windowswebapp
+
+  - name: linuxwebapp
     base:
-      # This is your updated base for the App Service (a WindowsWebApp)
+      # This is your updated base for the App Service (a LinuxWebApp)
       apiVersion: web.azure.upbound.io/v1beta2
-      kind: WindowsWebApp
+      kind: LinuxWebApp
       metadata:
         name: default-webapp
       spec:
@@ -61,16 +78,42 @@ spec:
           location: italynorth
           servicePlanIdRef:
             name: default-appserviceplan
-          siteConfig: {}
+          siteConfig:
+            applicationStack:
+              dockerImage: "nginx"
+              dockerImageTag: "latest"
+              dockerRegistryUrl: "docker.io"
     patches:
-      - fromFieldPath: "spec.appServiceName"
+      - type: CombineFromComposite
+        combine:
+          strategy: string
+          variables:
+            - fromFieldPath: "spec.appName"
+            - fromFieldPath: "spec.randomSuffix"
+          string:
+            fmt: "%s%s"
         toFieldPath: "metadata.name"
-      - fromFieldPath: "spec.resourceGroup"
+      - fromFieldPath: "spec.appName"
         toFieldPath: "spec.forProvider.resourceGroupName"
-      - fromFieldPath: "spec.appServicePlanName"
+        transforms:
+          - type: string
+            string:
+              fmt: "%s-rg"
+      - fromFieldPath: "spec.appName"
         toFieldPath: "spec.forProvider.servicePlanIdRef.name"
+        transforms:
+          - type: string
+            string:
+              fmt: "%s-plan"
       - fromFieldPath: "spec.location"
         toFieldPath: "spec.forProvider.location"
+      - fromFieldPath: "spec.imageName"
+        toFieldPath: "spec.forProvider.siteConfig.applicationStack.dockerImage"
+      - fromFieldPath: "spec.imageTag"
+        toFieldPath: "spec.forProvider.siteConfig.applicationStack.dockerImageTag"
+      - fromFieldPath: "spec.imageRegistryUrl"
+        toFieldPath: "spec.forProvider.siteConfig.applicationStack.dockerRegistryUrl"
+
   - name: postgresql
     base:
       # This is your updated base for PostgreSQL Server
@@ -80,7 +123,7 @@ spec:
         name: default-db
       spec:
         forProvider:
-          administratorLogin: marcouser
+          administratorLogin: exampleuser
           administratorPasswordSecretRef:
             key: example-key
             name: example-secret
@@ -94,12 +137,24 @@ spec:
           storageTier: P30
           version: "16"
     patches:
-      - fromFieldPath: "spec.databaseName"
+      - type: CombineFromComposite
+        combine:
+          strategy: string
+          variables:
+            - fromFieldPath: "spec.appName"
+            - fromFieldPath: "spec.randomSuffix"
+          string:
+            fmt: "%s%s"
         toFieldPath: "metadata.name"
-      - fromFieldPath: "spec.resourceGroup"
+      - fromFieldPath: "spec.appName"
         toFieldPath: "spec.forProvider.resourceGroupName"
+        transforms:
+          - type: string
+            string:
+              fmt: "%s-rg"
       - fromFieldPath: "spec.location"
         toFieldPath: "spec.forProvider.location"
+
   - name: storageaccount
     base:
       # This is your updated base for the Storage Account (now an Account)
@@ -115,9 +170,20 @@ spec:
           location: italynorth
           resourceGroupName: default-rg
     patches:
-      - fromFieldPath: "spec.storageAccountName"
+      - type: CombineFromComposite
+        combine:
+          strategy: string
+          variables:
+            - fromFieldPath: "spec.appName"
+            - fromFieldPath: "spec.randomSuffix"
+          string:
+            fmt: "%s%s"
         toFieldPath: "metadata.name"
-      - fromFieldPath: "spec.resourceGroup"
+      - fromFieldPath: "spec.appName"
         toFieldPath: "spec.forProvider.resourceGroupName"
+        transforms:
+          - type: string
+            string:
+              fmt: "%s-rg"
       - fromFieldPath: "spec.location"
         toFieldPath: "spec.forProvider.location"

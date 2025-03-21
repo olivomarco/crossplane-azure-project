@@ -21,17 +21,17 @@ spec:
           spec:
             type: object
             properties:
+              appName:
+                type: string
+              randomSuffix:
+                type: string
               location:
                 type: string
-              appServicePlanName:
-                type: string
-              appServiceName:
-                type: string
-              databaseName:
-                type: string
-              storageAccountName:
-                type: string
-              resourceGroup:
-                type: string
               appServicePlanSize:
+                type: string
+              imageName:
+                type: string
+              imageTag:
+                type: string
+              imageRegistryUrl:
                 type: string
